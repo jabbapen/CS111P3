@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/queue.h>
+#include <pthread.h>
+#include <errno.h> 
 
 struct list_entry {
 	const char *key;
@@ -14,6 +16,9 @@ struct list_entry {
 SLIST_HEAD(list_head, list_entry);
 
 struct hash_table_entry {
+	// Connor Code
+	pthread_mutex_t hash_mutex;
+	// End of Connor Code
 	struct list_head list_head;
 };
 
@@ -71,6 +76,9 @@ void hash_table_v2_add_entry(struct hash_table_v2 *hash_table,
                              uint32_t value)
 {
 	struct hash_table_entry *hash_table_entry = get_hash_table_entry(hash_table, key);
+	// Connor code
+	if(pthread_mutex_lock(&hash_table_entry->hash_mutex) != 0) exit(errno);
+	// end of Connor code
 	struct list_head *list_head = &hash_table_entry->list_head;
 	struct list_entry *list_entry = get_list_entry(hash_table, key, list_head);
 
@@ -84,6 +92,9 @@ void hash_table_v2_add_entry(struct hash_table_v2 *hash_table,
 	list_entry->key = key;
 	list_entry->value = value;
 	SLIST_INSERT_HEAD(list_head, list_entry, pointers);
+	// Connor Code
+	if(pthread_mutex_unlock(&hash_table_entry->hash_mutex) != 0) exit(errno);
+	// End of Connor Code
 }
 
 uint32_t hash_table_v2_get_value(struct hash_table_v2 *hash_table,
