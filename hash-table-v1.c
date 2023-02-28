@@ -16,7 +16,7 @@ struct list_entry {
 SLIST_HEAD(list_head, list_entry);
 
 // Connor Code
-static pthread_mutex_t hashv1_mutex;
+static pthread_mutex_t hashv1_mutex = PTHREAD_MUTEX_INITIALIZER;
 // End of Connor Code
 
 struct hash_table_entry {
@@ -122,5 +122,8 @@ void hash_table_v1_destroy(struct hash_table_v1 *hash_table)
 			free(list_entry);
 		}
 	}
+	// Connor Code
+	pthread_mutex_destroy(&hashv1_mutex);
+	// End of Connor Code
 	free(hash_table);
 }

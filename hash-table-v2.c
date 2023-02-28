@@ -33,6 +33,10 @@ struct hash_table_v2 *hash_table_v2_create()
 	for (size_t i = 0; i < HASH_TABLE_CAPACITY; ++i) {
 		struct hash_table_entry *entry = &hash_table->entries[i];
 		SLIST_INIT(&entry->list_head);
+
+		// Connor code
+		pthread_mutex_init(&entry->hash_mutex, NULL);
+		// End of Connor code
 	}
 	return hash_table;
 }
@@ -118,6 +122,9 @@ void hash_table_v2_destroy(struct hash_table_v2 *hash_table)
 			SLIST_REMOVE_HEAD(list_head, pointers);
 			free(list_entry);
 		}
+		// Connor code
+		pthread_mutex_destroy(&entry->hash_mutex);
+		// End of Connor code
 	}
 	free(hash_table);
 }
