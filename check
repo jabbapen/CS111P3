@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+
+# Simple script for parsing the output of ./hash-table-tester and checking if
+# your v2 performance relative to the base performance meets the threshold
+# stated on Piazza.
+
+# EXAMPLE USAGE: ./hash-table-tester -t 8 -s 50000 | ./check
+
+BLACK=$(tput setaf 0)
+RED=$(tput setaf 1)
+GREEN=$(tput setaf 2)
+END=$(tput sgr0)
+
+# Capture the output as it comes in through stdin, but also echo it back out.
+input=$(cat)
+echo "${BLACK}${input}${END}"
+
+# Extract and clean the usec numbers from the output.
+base_usec=$(echo "$input" | awk '/Hash table base: .*/ {print $4}' | tr -d ',')
+v2_usec=$(echo "$input" | awk '/Hash table v2: .*/ {print $4}' | tr -d ',')
+
+# Get the number of cores being used.
+num_cores=$(nproc)
+echo "* You are currently running on ${num_cores} cores."
+
+# Use bc to perform floating point arithmetic on the criterion formula.
+
+# NOTE: If instructors ever change the formula, change this line to match it.
+ratio_formula="${base_usec} / (4 - 1)"
+base_ratio=$(echo "scale=2; ${ratio_formula}" | bc -l)
+echo "* Your base performance ratio is: ${ratio_formula} = ${base_ratio}"
+
+# Use ratio_formula instead of the formatted ratio to prevent rounding errors.
+comparison_formula="${v2_usec} < (${ratio_formula})"
+echo "* Testing v2 comparison expression: ${comparison_formula}"
+result=$(echo "$comparison_formula" | bc -l)
+
+# bc returns 1 if a comparison is true and 0 if it's false.
+echo -n "* PASSED: "
+if [ $result -eq 1 ]; then
+    echo "${GREEN}true${END}"
+else
+    echo "${RED}false${END}"
+    exit 1
+fi
