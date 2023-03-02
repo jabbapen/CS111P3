@@ -80,25 +80,28 @@ void hash_table_v2_add_entry(struct hash_table_v2 *hash_table,
                              uint32_t value)
 {
 	struct hash_table_entry *hash_table_entry = get_hash_table_entry(hash_table, key);
-	// Connor code
-	if(pthread_mutex_lock(&hash_table_entry->hash_mutex) != 0) exit(errno);
-	// end of Connor code
+	
+	
 	struct list_head *list_head = &hash_table_entry->list_head;
 	struct list_entry *list_entry = get_list_entry(hash_table, key, list_head);
 
 	/* Update the value if it already exists */
 	if (list_entry != NULL) {
+		if(pthread_mutex_lock(&hash_table_entry->hash_mutex) != 0) exit(errno);
 		list_entry->value = value;
+		if(pthread_mutex_unlock(&hash_table_entry->hash_mutex) != 0) exit(errno);
 		return;
 	}
 
 	list_entry = calloc(1, sizeof(struct list_entry));
 	list_entry->key = key;
 	list_entry->value = value;
-	SLIST_INSERT_HEAD(list_head, list_entry, pointers);
 	// Connor Code
-	if(pthread_mutex_unlock(&hash_table_entry->hash_mutex) != 0) exit(errno);
+	if(pthread_mutex_lock(&hash_table_entry->hash_mutex) != 0) exit(errno);
 	// End of Connor Code
+	SLIST_INSERT_HEAD(list_head, list_entry, pointers);
+	if(pthread_mutex_unlock(&hash_table_entry->hash_mutex) != 0) exit(errno);
+	
 }
 
 uint32_t hash_table_v2_get_value(struct hash_table_v2 *hash_table,
